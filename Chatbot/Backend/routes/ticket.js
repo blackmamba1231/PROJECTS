@@ -78,7 +78,7 @@ router.post('/paypal/create-order', async (req, res) => {
     }
 });
 
-router.post('/api/v1/paypal/capture-order', async (req, res) => {
+router.post('/paypal/capture-order', async (req, res) => {
     const { orderId } = req.body;
 
     const request = new paypal.orders.OrdersCaptureRequest(orderId);
@@ -121,10 +121,9 @@ router.post('/paypal/webhook', (req, res) => {
 });
 router.get('/status/:orderId', async (req, res) => {
     const { orderId } = req.params;
-
+    console.log("Fetching status for ticketid"+ orderId )
     try {
-        // Fetch ticket details from the database using PayPal Order ID
-        const ticket = await Ticket.findOne({ _id: orderId });
+        const ticket = await Ticket.findById( orderId );
 
         if (!ticket) {
             return res.status(404).json({ message: 'Ticket not found' });

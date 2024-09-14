@@ -8,7 +8,6 @@ require('dotenv').config();
  const rootRouter = require("./routes/index");
  app.use("/api/v1",rootRouter);
 
-// Route to capture PayPal payment
 
  app.listen(3000);
  

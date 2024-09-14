@@ -30,12 +30,11 @@ const TicketForm = () => {
             setPrice(ticketResponse.data.price);
             setPayPalOrderId(ticketResponse.data._id); // Store the ticket ID for later use
 
-            // 2. Create PayPal order
+            
             const payPalResponse = await axios.post('http://localhost:3000/api/v1/ticket/paypal/create-order', {
                 amount: ticketResponse.data.price
             });
 
-            // 3. Redirect to PayPal
             window.location.href = `https://www.paypal.com/checkoutnow?token=${payPalResponse.data.id}`;
 
         } catch (error) {
@@ -45,21 +44,21 @@ const TicketForm = () => {
 
     const handlePayPalCapture = async (orderId) => {
         try {
-            // 1. Capture PayPal payment
+          
             const captureResponse = await axios.post('http://localhost:3000/api/v1/ticket/paypal/capture-order', {
                 orderId
             });
 
-            // 2. Update the ticket to confirmed
+            
             await axios.post('http://localhost:3000/api/v1/ticket/confirm', {
                 ticketId: payPalOrderId
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
 
-            // Update the user on successful payment
+           
             setBookingSuccess(true);
-            setPayPalOrderId(null); // Clear the PayPal order ID after successful payment
+            setPayPalOrderId(null); 
 
         } catch (error) {
             console.error('Error capturing PayPal payment or confirming ticket:', error);
@@ -67,7 +66,6 @@ const TicketForm = () => {
         }
     };
 
-    // Check for PayPal token in URL and capture payment
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const token = queryParams.get('token');

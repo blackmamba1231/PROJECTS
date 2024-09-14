@@ -8,8 +8,8 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 const navigation = [
     { name: 'Sign Up', href: '/signup' },
     { name: 'Sign In', href: '/signin' },
-    { name: 'Book a Ticket', href: '/book' },
-    { name: 'View My Tickets', href: '/my-tickets' },
+    { name: 'Book a Ticket', href: '/signin' },
+    { name: 'View My Tickets', href: '/signin' },
 ];
 
 const Home = () => {

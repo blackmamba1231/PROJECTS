@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
- // CSS for styling details page
+
 
 const TicketDetails = () => {
-    const { id } = useParams(); // Get ticket id from route
+    const { id } = useParams(); 
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

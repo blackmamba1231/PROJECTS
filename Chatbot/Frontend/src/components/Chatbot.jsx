@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// For styling
 
-// Define language options
+
+
 const translations = {
   en: {
     hello: "Hello! What is your name?",
@@ -17,7 +17,8 @@ const translations = {
     paymentSuccess: "Payment was successful! Your tickets have been booked.",
     paymentFailed: "Payment failed. Please try again.",
     error: "Error: Could not process your booking.",
-    retryConfirm: "I didn't understand that. Please type 'confirm' to proceed with booking."
+    retryConfirm: "I didn't understand that. Please type 'confirm' to proceed with booking.",
+    help: "How can I help you?"
   },
   es: {
     hello: "¡Hola! ¿Cómo te llamas?",
@@ -32,7 +33,8 @@ const translations = {
     paymentSuccess: "¡Pago exitoso! Tus boletos han sido reservados.",
     paymentFailed: "El pago falló. Por favor intenta de nuevo.",
     error: "Error: No se pudo procesar tu reserva.",
-    retryConfirm: "No entendí eso. Por favor escribe 'confirmar' para continuar con la reserva."
+    retryConfirm: "No entendí eso. Por favor escribe 'confirmar' para continuar con la reserva.",
+    help: "¿Cómo te puedo ayudar?"
   },
   fr: {
     hello: "Bonjour ! Quel est votre nom ?",
@@ -47,7 +49,8 @@ const translations = {
     paymentSuccess: "Paiement réussi ! Vos billets ont été réservés.",
     paymentFailed: "Le paiement a échoué. Veuillez réessayer.",
     error: "Erreur : Impossible de traiter votre réservation.",
-    retryConfirm: "Je n'ai pas compris. Tapez 'confirmer' pour continuer la réservation."
+    retryConfirm: "Je n'ai pas compris. Tapez 'confirmer' pour continuer la réservation.",
+    help: "Comment puis-je vous aider?"
   },
   de: {
     hello: "Hallo! Wie ist Ihr Name?",
@@ -62,7 +65,8 @@ const translations = {
     paymentSuccess: "Zahlung erfolgreich! Ihre Tickets wurden gebucht.",
     paymentFailed: "Die Zahlung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
     error: "Fehler: Ihre Buchung konnte nicht verarbeitet werden.",
-    retryConfirm: "Ich habe das nicht verstanden. Geben Sie 'bestätigen' ein, um mit der Buchung fortzufahren."
+    retryConfirm: "Ich habe das nicht verstanden. Geben Sie 'bestätigen' ein, um mit der Buchung fortzufahren.",
+    help: "Wie kann ich Ihnen helfen?"
   },
   zh: {
     hello: "你好！你叫什么名字？",
@@ -77,15 +81,17 @@ const translations = {
     paymentSuccess: "付款成功！您的票已被预订。",
     paymentFailed: "付款失败。请再试一次。",
     error: "错误：无法处理您的预订。",
-    retryConfirm: "我不明白。请输入“确认”继续预订。"
+    retryConfirm: "我不明白。请输入“确认”继续预订。",
+    help: "我能帮你什么吗？"
   }
 };
+
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [language, setLanguage] = useState('en'); // Default to English
+  const [language, setLanguage] = useState('en'); 
   const [formData, setFormData] = useState({
     visitorName: '',
     visitDate: '',
@@ -109,11 +115,23 @@ const ChatBot = () => {
   };
 
   const handleLanguageChange = (lang) => {
-    setLanguage(lang);  // Change language when user selects a different one
-    setMessages([{ text: translations[lang].hello, type: 'bot' }]);  // Reset chat in selected language
+    setLanguage(lang); 
+    setMessages([{ text: translations[lang].hello, type: 'bot' }]); 
     setStep(1);
   };
-
+  
+  const fetchNLPResponse = async (message) => {
+    console.log( {
+      "message": message
+    } );
+    try {
+      const response = await axios.post('http://localhost:3000/api/v1/bot/chat', {"message": message});
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching NLP response:", error);
+      return null;
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -122,56 +140,74 @@ const ChatBot = () => {
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
     setIsLoading(true);
-
-    if (step === 1) {
+    if(step === 1){
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: `${translations[language].niceToMeet}, ${input}! ${translations[language].visitorName}`, type: 'bot' }
-      ]);
-      setStep(2);
-    } else if (step === 2) {
+        { text: `${translations[language].niceToMeet} ${input}! ${translations[language].help} `, type: 'bot'}]);
+        setStep(2);
+    }
+    if(step === 2){
+        const response = await fetchNLPResponse(input);
+        console.log(response);
+        if(response.intent === 'ticket.booking'){
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: response.answer, type: 'bot'}]);
+          setStep(3);
+        }else{
+          if(response.intent === 'None')
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              { text: response.answer, type: 'bot'}]);
+          setStep(2);
+        }
+      }
+   
+    if (step === 3) {
       setFormData((prevFormData) => ({ ...prevFormData, visitorName: input }));
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: translations[language].visitDate, type: 'bot' }
       ]);
-      setStep(3);
-    } else if (step === 3) {
+      setStep(4);
+    }else if (step === 4) {
       setFormData((prevFormData) => ({ ...prevFormData, visitDate: input }));
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: translations[language].ticketType, type: 'bot' }
       ]);
-      setStep(4);
-    } else if (step === 4) {
+      
+      setStep(5);
+    } else if (step === 5) {
       setFormData((prevFormData) => ({ ...prevFormData, ticketType: input }));
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: translations[language].quantity, type: 'bot' }
       ]);
-      setStep(5);
-    } else if (step === 5) {
+      setStep(6);
+      
+    } else if (step === 6) {
       setFormData((prevFormData) => ({ ...prevFormData, quantity: input }));
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: translations[language].eventType, type: 'bot' }
       ]);
-      setStep(6);
-    } else if (step === 6) {
+      setStep(7);
+    } else if (step === 7) {
       setFormData((prevFormData) => ({ ...prevFormData, eventType: input }));
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: translations[language].confirm, type: 'bot' }
       ]);
-      setStep(7);
-    } else if (step === 7 && input.toLowerCase() === 'confirm') {
+      setStep(8);
+    }else if (step === 8 && input.toLowerCase() === 'confirm') {
       try {
         const ticketResponse = await axios.post('http://localhost:3000/api/v1/ticket/create-pending', formData, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-
+        console.log(ticketResponse.data.ticket._id);
         setPrice(ticketResponse.data.price);
-        setPayPalOrderId(ticketResponse.data._id);
+        setPayPalOrderId(ticketResponse.data.ticket._id);
 
         const orderResponse = await axios.post('http://localhost:3000/api/v1/ticket/paypal/create-order', {
           amount: ticketResponse.data.price
@@ -183,7 +219,7 @@ const ChatBot = () => {
           ...prevMessages,
           { text: `${translations[language].success} Total price: $${ticketResponse.data.price}.`, type: 'bot' }
         ]);
-
+        checkPaymentStatus();
         setFormData({
           visitorName: '',
           visitDate: '',
@@ -197,20 +233,15 @@ const ChatBot = () => {
           { text: translations[language].error, type: 'bot' }
         ]);
       }
-    } else {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: translations[language].retryConfirm, type: 'bot' }
-      ]);
     }
 
     setIsLoading(false);
   };
   const checkPaymentStatus = async () => {
     try {
-        const response = await axios.get(`http://localhost:3000/api/v1/ticket/status/${payPalOrderId}`);
+        const response = await axios.get(`http://localhost:3000/api/v1/ticket/status/?orderId=${payPalOrderId}`);
         const status = response.data.status;
-
+        console.log('Payment status:' +status);
         if (status === 'confirmed') {
             setMessages((prevMessages) => [
                 ...prevMessages,

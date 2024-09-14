@@ -20,7 +20,7 @@ const updateSchema = zod.object({
     password: zod.string().optional(),
     firstName: zod.string().optional(),
     lastname: zod.string().optional(),
-    avatar: zod.string().optional,
+    
 })
 
 router.post("/signup",async (req,res)=>{
